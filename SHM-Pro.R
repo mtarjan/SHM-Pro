@@ -14,23 +14,37 @@ library(ggplot2)
 data<-read_excel("G:/cameron/FWS_Refuge_202111/Analysis/FWS_NWR_spp_20211205.xlsx", sheet = "FWS_NWR_spp_20211205") %>% data.frame()
 
 ##add species names
-##need a different table that has more of the species names
-#SpeciesMasterLookupRaster <- read_csv("G:/tarjan/Model_Review_Management/Data/SpeciesMasterLookupRaster.csv") %>% dplyr::mutate(species = strsplit((strsplit(`Scientific Name`, " \\(") %>% purrr::map(1)) %>% unlist(), ",") %>% purrr::map(1) %>% unlist())
-#SpeciesMasterLookupRaster$cutecode.model<-SpeciesMasterLookupRaster$cutecode
-#SpeciesMasterLookupRaster$cutecode<-str_split(SpeciesMasterLookupRaster$cutecode.model, pattern = "_", simplify = T)[,1]
+mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx", sheet = "MoBI_Model_Assessment", skip = 2) %>% data.frame()
+colnames(mobimodels)[3:7]<-c("cutecode", "Broad Group", "Taxonomic Group", "Scientific Name", "Common Name")
 
 ##add species names to data
-#data <- left_join(x = data, y = subset(SpeciesMasterLookupRaster, select=c("cutecode", "Common Name")))
+mobi.sub<-subset(mobimodels, select=c("cutecode", "Common Name", "Broad Group", "Jan21.Rounded.G.Rank"))
+colnames(mobi.sub)[3:4]<-c("Taxonomic Group","G Rank")
+data <- left_join(x = data, y = mobi.sub)
 
 ##SUMMARY STATS
 ##number of models in the NWRs
-subset(data, RSL_TYPE=="NWR")
+length(unique(subset(data, RSL_TYPE=="NWR" & FWS_SOURCE =="IS" & is.na(Superceded_by))$cutecode))
+
+##number of models in the acquisition boundary
+length(unique(subset(data, FWS_SOURCE =="AA")$cutecode)) ##need to filter out dod if need to sum numbers
+
+##number of models in acquisition boundary that are not in interest layer
+aa.spp<-subset(data, FWS_SOURCE =="AA")
+is.spp<-subset(data, FWS_SOURCE =="IS")
+aanis.spp<-subset(aa.spp, !(cutecode %in% is.spp$cutecode), select=c("cutecode", "Taxonomic Group", "Common Name", "G Rank")) %>% unique()
+nrow(aanis.spp)
+##which species?
+table(aanis.spp$`Taxonomic Group`)
+
+##superceeded by means there were two models
+##anyting from AA has AANIS superceed field
 
 ##percent of species range within NWR - bar plot
-data.plot <- subset(data, RSL_TYPE=="NWR" & FWS_SOURCE=="IS" & is.na(Superceded_by)) %>% group_by(cutecode) %>% summarise(`Percent of Range` = (sum(VALUE_1)/Total.model.area)*100) %>% unique() %>% arrange(desc(`Percent of Range`))
-data.plot$cutecode <- factor(data.plot$cutecode, levels = data.plot %>% arrange(`Percent of Range`) %>% pull(cutecode))
+data.plot <- subset(data, RSL_TYPE=="NWR" & FWS_SOURCE=="IS" & is.na(Superceded_by)) %>% group_by(cutecode, `Common Name`, `G Rank`, `Taxonomic Group`) %>% summarise(`Percent of Range` = (sum(VALUE_1)/Total.model.area)*100) %>% unique() %>% arrange(desc(`Percent of Range`))
+data.plot$`Common Name` <- factor(data.plot$`Common Name`, levels = data.plot %>% arrange(`Percent of Range`) %>% pull(`Common Name`))
 
-fig <- ggplot(data = data.plot[1:20,], aes(x = cutecode, y = `Percent of Range`, fill=grey(0.5))) +
+fig <- ggplot(data = data.plot[1:20,], aes(x = `Common Name`, y = `Percent of Range`, fill=`G Rank`)) +
   geom_bar(stat="identity", position = "dodge", color = grey(0.2), size = 0.5) +
   coord_flip() +
   theme_bw() +
@@ -38,17 +52,19 @@ fig <- ggplot(data = data.plot[1:20,], aes(x = cutecode, y = `Percent of Range`,
         panel.grid.major.y = element_blank(),
         axis.ticks = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.y = element_text(hjust = 0),
-        legend.position = "none"
+        axis.text.y = element_text(hjust = 0)#,
+        #legend.position = "none"
   ) +
+  geom_text(aes(label = `Taxonomic Group`), size = 3, y=data.plot$`Percent of Range`[1:20]/2) +
+  scale_fill_brewer(palette = "Greens", direction = -1) +
   ylab("Percent of Species Range in National Wildlife Refuges")
 fig
 
 ##percent of species range within Acquisition layer, but not in interest layer (FWS does not currently own, but can acquire)
-data.plot <- subset(data, FWS_SOURCE =="AANIS" & is.na(Superceded_by) & RSL_TYPE=="NWR") %>% group_by(cutecode) %>% summarise(`Percent of Range` = (sum(VALUE_1)/Total.model.area)*100) %>% unique() %>% arrange(desc(`Percent of Range`))
-data.plot$cutecode <- factor(data.plot$cutecode, levels = data.plot %>% arrange(`Percent of Range`) %>% pull(cutecode))
+data.plot <- subset(data, FWS_SOURCE =="AANIS" & is.na(Superceded_by) & RSL_TYPE=="NWR") %>% group_by(cutecode, `Common Name`, `G Rank`, `Taxonomic Group`) %>% summarise(`Percent of Range` = (sum(VALUE_1)/Total.model.area)*100) %>% unique() %>% arrange(desc(`Percent of Range`))
+data.plot$`Common Name` <- factor(data.plot$`Common Name`, levels = data.plot %>% arrange(`Percent of Range`) %>% pull(`Common Name`))
 
-fig <- ggplot(data = data.plot[1:20,], aes(x = cutecode, y = `Percent of Range`, fill=grey(0.5))) +
+fig <- ggplot(data = data.plot[1:20,], aes(x = `Common Name`, y = `Percent of Range`, fill=`G Rank`)) +
   geom_bar(stat="identity", position = "dodge", color = grey(0.2), size = 0.5) +
   coord_flip() +
   theme_bw() +
@@ -56,8 +72,10 @@ fig <- ggplot(data = data.plot[1:20,], aes(x = cutecode, y = `Percent of Range`,
         panel.grid.major.y = element_blank(),
         axis.ticks = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.y = element_text(hjust = 0),
-        legend.position = "none"
+        axis.text.y = element_text(hjust = 0)#,
+        #legend.position = "none"
   ) +
-  ylab("Percent of Species Range outside Interest Layer and in Acquisition Area")
+  geom_text(aes(label = `Taxonomic Group`), size = 3, y=data.plot$`Percent of Range`[1:20]/2) +
+  scale_fill_brewer(palette = "Greens", direction = -1) +
+  ylab("Percent of Species Range outside Interest Layer and in Acquisition Area for NWR")
 fig
