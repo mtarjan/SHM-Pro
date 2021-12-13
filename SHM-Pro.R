@@ -79,3 +79,6 @@ fig <- ggplot(data = data.plot[1:20,], aes(x = `Common Name`, y = `Percent of Ra
   scale_fill_brewer(palette = "Greens", direction = -1) +
   ylab("Percent of Species Range outside Interest Layer and in Acquisition Area for NWR")
 fig
+
+##pull out mobi pollinators
+pollinators<- unique(subset(mobimodels,`Broad Group`=="Pollinators" & Included.in.MoBI =="yes", select =c("ELEMENT_GLOBAL_ID...1", "Taxonomic Group","Scientific Name", "Common Name", "Rounded.G.Rank", "ESA.Status")))
