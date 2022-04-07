@@ -17,8 +17,8 @@ mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx"
 ##read 1B plant list
 plant1b<-read_excel("Data/plants-1b.xlsx") %>% data.frame()
 ##add EGT_ID
-#plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("SNAME", "EGT_ID", "PS_EGT_ID"))), by = c("ScientificName" = "SNAME"))
-plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("ELCODE_BCD", "EGT_ID", "PS_EGT_ID"))), by = c("ElementCode" = "ELCODE_BCD")) ##add EGTID for synonyms
+plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("SNAME", "EGT_ID", "PS_EGT_ID"))), by = c("ScientificName" = "SNAME"))
+#plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("ELCODE_BCD", "EGT_ID", "PS_EGT_ID"))), by = c("ElementCode" = "ELCODE_BCD")) ##add EGTID for synonyms
 length(which(is.na(plant1b$EGT_ID)))
 
 ##add whether plant has a mobi model
