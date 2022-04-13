@@ -18,16 +18,16 @@ mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx"
 colnames(mobimodels)[3:7]<-c("cutecode", "Broad Group", "Taxonomic Group", "Scientific Name", "Common Name")
 
 ##add species names to data
-mobi.sub<-subset(mobimodels, select=c("cutecode", "Common Name", "Broad Group", "Jan21.Rounded.G.Rank"))
-colnames(mobi.sub)[3:4]<-c("Taxonomic Group","G Rank")
-data <- left_join(x = data, y = mobi.sub)
+mobi.sub<-subset(mobimodels, select=c("cutecode", "Scientific Name", "Common Name", "Broad Group", "Jan21.Rounded.G.Rank", "ESA.Status"))
+colnames(mobi.sub)[4:5]<-c("Taxonomic Group","G Rank")
+data <- left_join(x = data, y = mobi.sub) ##NOTE THAT PITUMUGI HAD A TAXONOMY CHANGE SO DOESN'T GET NAME ASSIGNED HERE
 
 ##SUMMARY STATS
 ##number of models in the NWRs
 length(unique(subset(data, RSL_TYPE=="NWR" & FWS_SOURCE =="IS" & is.na(Superceded_by))$cutecode))
 
 ##number of models in the acquisition boundary
-length(unique(subset(data, FWS_SOURCE =="AA")$cutecode)) ##need to filter out dod if need to sum numbers
+length(unique(subset(data, FWS_SOURCE =="AA")$cutecode)) ##need to filter out dod if need to sum numbers (some species have mobi and dod models)
 
 ##number of models in acquisition boundary that are not in interest layer
 aa.spp<-subset(data, FWS_SOURCE =="AA")
@@ -82,3 +82,29 @@ fig
 
 ##pull out mobi pollinators
 pollinators<- unique(subset(mobimodels,`Broad Group`=="Pollinators" & Included.in.MoBI =="yes", select =c("ELEMENT_GLOBAL_ID...1", "Taxonomic Group","Scientific Name", "Common Name", "Rounded.G.Rank", "ESA.Status")))
+
+##priority list for modeling
+
+priority<-unique(subset(data, select=c(Project, cutecode, `Scientific Name`, `Common Name`, `G Rank`, `Taxonomic Group`, `ESA.Status`))) ##get unique list of species
+##calculate percent of model in NWR
+data.temp <- subset(data, RSL_TYPE=="NWR" & FWS_SOURCE=="IS" & is.na(Superceded_by)) %>% group_by(cutecode) %>% summarise(`Percent.range.NWR` = (sum(VALUE_1)/Total.model.area)*100) %>% unique()
+priority<-left_join(priority, data.temp)
+##calculate percent of model in acquisition area
+##percent of species range within Acquisition layer, but not in interest layer (FWS does not currently own, but can acquire)
+data.temp <- subset(data, FWS_SOURCE =="AANIS" & is.na(Superceded_by) & RSL_TYPE=="NWR") %>% group_by(cutecode) %>% summarise(`Percent.range.acqu` = (sum(VALUE_1)/Total.model.area)*100) %>% unique()
+priority<-left_join(priority, data.temp)
+
+##add species from habitat project 036
+hab<-read_excel("Data/FWS_SE_Habitat_species.xlsx") %>% data.frame()
+priority<-left_join(x=priority, y=hab, by = c("Scientific Name" = "Scientific.Name"))
+
+##priority are species that are not ESA listed and occur in the NWR or acquisition layer
+##need to include more ESA statuses that are not "listed": https://help.natureserve.org/biotics/content/record_management/Element_Files/Element_Tracking/ETRACK_USESA_Status.htm
+listed<-c("E", "T")
+priority<-subset(priority, 
+                 USW0R036 == T 
+                 | (is.na(ESA.Status) 
+                    & (str_detect(`G Rank`, "G1") | str_detect(`G Rank`, "G2"))  
+                    & (Percent.range.NWR>=20 | Percent.range.acqu>=20)
+                    )
+                 )
