@@ -20,12 +20,17 @@ mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx"
 
 ##read 1B plant list
 plant1b<-read_excel("Data/plants-1b.xlsx", sheet= "GlobalID") %>% data.frame() ##1B plants iwthin 5 mi of DRECP
+##use new list sent from BLM 4/13
+plant1b.blm<-read_excel("Data/BLMCASSPlist_20220324_forweb.xlsx") %>% data.frame()
 
 ##IRRELEVANT AFTER RECEIVING PLANT1B LIST WITH ELEMENT GLOBAL ID
 ##add EGT_ID
 #plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("SNAME", "EGT_ID", "PS_EGT_ID"))), by = c("ScientificName" = "SNAME"))
 #plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("ELCODE_BCD", "EGT_ID", "PS_EGT_ID"))), by = c("ElementCode" = "ELCODE_BCD")) ##add EGTID for synonyms
 #length(which(is.na(plant1b$EGT_ID)))
+
+##add EGT_ID to plant1b.blm
+plant1b.blm<- left_join(x = plant1b.blm, y = unique(subset(data, select=c("SNAME", "EGT_ID", "PS_EGT_ID"))), by = c("Scientific.Name" = "SNAME")) ##add EGTID for synonyms
 
 ##add parent ID
 plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("EGT_ID", "PS_EGT_ID"))), by = c("ELEMENT_GLOBAL_ID" = "EGT_ID"))
@@ -91,3 +96,4 @@ compare <- function(a,b) {
 compare(a = snap1b$SNAME, b = plant1b$SNAME)
 #compare(a = c(1,2,3, 4), b = c(1,2,3))
 #subset(plant1b, SNAME=="Monardella linoides ssp. anemonoides")
+#compare(a = plant1b$SNAME, b = plant1b.blm$Scientific.Name)
