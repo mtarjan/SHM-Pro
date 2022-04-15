@@ -32,19 +32,9 @@ if (!file.exists(str_c("Output-", Sys.Date()))) {
 ##LOAD SPATIAL LAYERS
 ##layer of spatial extent for selecting species
 desert.path<-"C:/Users/max_tarjan/OneDrive - NatureServe/Documents/GIS_data/DRECP Boundary/data/v101/0000DRECP Boundary.lyr"
-#desert<-arc.open(desert.path)
-#desert.df<-arc.select(desert)
-#desert.sf<-arc.data2sf(desert.df)
 
 ##biotics snapshot
 bld.path<-"S:/Data/NatureServe/BLD_Occurrences/NS_BLD_GeoDB/Snapshots/Monthly-2022-03/bld-2022-03.gdb/BLD_EO_SPECIES"
-#bld<-arc.open(bld.path)
-#bld.df<-arc.select(bld, c('EGT_ID', 'SNAME', 'SCOMNAME', 'G_RANK', 'MAJ_GRP1'), where_clause = 'MAJ_GRP1 = "Vascular Plants - Conifers and relatives"')
-
-##counties for a test dataset
-county.path<-"S:/Data/NatureServe/Boundaries_Administrative/USGS/countyp010g.gdb/countyp010g"
-#county<-arc.open(county.path)
-#county.df<-arc.select(county)
 
 ##CLIP BLD EOS BY A BOUNDARY LAYER
 ##result is written out as a shapefile
@@ -52,3 +42,10 @@ start.time<-Sys.time()
 arcpy$Clip_analysis(in_features = bld.path, clip_features = desert.path, out_feature_class = str_c("Output-", Sys.Date(), "/bld_desert"))
 end.time<-Sys.time()
 end.time-start.time
+
+##open clipped bld using arcbridge for wrangling
+bld.desert.path<-str_c("Output-", Sys.Date(), "/bld_desert.shp")
+bld.desert<-arc.open(bld.desert.path)
+#bld.df<-arc.select(bld, c('EGT_ID', 'SNAME', 'SCOMNAME', 'G_RANK', 'MAJ_GRP1'), where_clause = 'MAJ_GRP1 = "Vascular Plants - Conifers and relatives"')
+bld.desert.df<-arc.select(bld.desert, where_clause = )
+#desert.sf<-arc.data2sf(desert.df)
