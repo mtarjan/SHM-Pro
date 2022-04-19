@@ -31,9 +31,13 @@ plant1b.blm<-read_excel("Data/BLMCASSPlist_20220324_forweb.xlsx") %>% data.frame
 
 ##add EGT_ID to plant1b.blm
 plant1b.blm<- left_join(x = plant1b.blm, y = unique(subset(data, select=c("SNAME", "EGT_ID", "PS_EGT_ID"))), by = c("Scientific.Name" = "SNAME")) ##add EGTID for synonyms
+plant1b.blm$blm<-T
 
 ##add parent ID
 plant1b<- left_join(x = plant1b, y = unique(subset(data, select=c("EGT_ID", "PS_EGT_ID"))), by = c("ELEMENT_GLOBAL_ID" = "EGT_ID"))
+
+##add whether on blm land
+plant1b <- left_join(x = plant1b, y= subset(plant1b.blm, select=c("EGT_ID", "blm")), by = c("ELEMENT_GLOBAL_ID" = "EGT_ID"))
 
 ##add whether plant has a mobi model
 temp.mobi<- left_join(x = plant1b, y = subset(mobimodels, !is.na(ELEMENT_GLOBAL_ID...1), select=c("ELEMENT_GLOBAL_ID...1", "Included.in.MoBI")), by = c("ELEMENT_GLOBAL_ID" = "ELEMENT_GLOBAL_ID...1"))
@@ -45,7 +49,7 @@ plant1b$Included.in.MoBI<-mutate(.data = temp.mobi, Included.in.MoBI=coalesce(In
 ##If EO has null or Medium RA then include with overlap > 50%
 ##If EO has Low or Very Low RA then include with overlap > 75%
 
-##subset drecp plants to 1b plants and by other biotics restrictions
+##subset drecp plants to 1b plants and by other biotics restrictions, including whether the plant is known to occur on blm lands
 data.sub<-subset(data,
        EGT_ID %in% c(plant1b$ELEMENT_GLOBAL_ID, plant1b$PS_EGT_ID) ##include parent species for subspecies
        & POLY_AREA/Shape_Area >= 0.5
@@ -55,7 +59,7 @@ data.sub<-subset(data,
        & (ID_CONF == "Y" | is.na(ID_CONF)) #ID confirmed !=N
        );dim(data.sub)
 ##Restrict 1b plants to get species to model
-model.spp<-subset(plant1b, ELEMENT_GLOBAL_ID %in% data.sub$EGT_ID | PS_EGT_ID %in% data.sub$EGT_ID)
+model.spp<-subset(plant1b, blm==T & (ELEMENT_GLOBAL_ID %in% data.sub$EGT_ID | PS_EGT_ID %in% data.sub$EGT_ID))
 ##add number of EOs in desert region
 eo.count.drecp<-data.sub %>% group_by(EGT_ID) %>% count() %>% data.frame()
 colnames(eo.count.drecp)[2] <- "EO.Count.DRECP"
