@@ -21,6 +21,7 @@ reticulate::use_condaenv(condaenv='C:/Program Files/ArcGIS/Pro/bin/Python/envs/a
 
 library(sf)
 library(tidyverse)
+#library(readxl)
 
 arcpy<-import("arcpy")
 
@@ -40,12 +41,18 @@ bld.path<-"S:/Data/NatureServe/BLD_Occurrences/NS_BLD_GeoDB/Snapshots/Monthly-20
 ##result is written out as a shapefile
 start.time<-Sys.time()
 arcpy$Clip_analysis(in_features = bld.path, clip_features = desert.path, out_feature_class = str_c("Output-", Sys.Date(), "/bld_desert"))
-end.time<-Sys.time()
-end.time-start.time
 
 ##open clipped bld using arcbridge for wrangling
 bld.desert.path<-str_c("Output-", Sys.Date(), "/bld_desert.shp")
 bld.desert<-arc.open(bld.desert.path)
-#bld.df<-arc.select(bld, c('EGT_ID', 'SNAME', 'SCOMNAME', 'G_RANK', 'MAJ_GRP1'), where_clause = 'MAJ_GRP1 = "Vascular Plants - Conifers and relatives"')
-bld.desert.df<-arc.select(bld.desert, where_clause = )
-#desert.sf<-arc.data2sf(desert.df)
+
+bld.desert.df<-arc.select(bld.desert)
+bld.desert.df<-arc.select(bld.desert, fields = c('EGT_ID', 'SNAME', 'SCOMNAME', 'G_RANK', 'MAJ_GRP1'), where_clause = "MAJ_GRP1 = 'Vascular Plants - Conifers and relatives'")
+
+##visualizing data subset
+bld.desert.sf<-arc.data2sf(bld.desert.df)
+plot(st_zm(bld.desert.sf["EGT_ID"]))
+
+library(sp)
+bld.desert.sp<-arc.data2sp(bld.desert.df)
+plot(bld.desert.sp)

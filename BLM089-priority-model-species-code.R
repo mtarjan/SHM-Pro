@@ -10,6 +10,7 @@ library(tidyverse)
 
 ##read in EO info
 ##biotics fields: https://natureserve01-my.sharepoint.com/:x:/g/personal/shara_howie_natureserve_org/EYznjVG_BAJGi40urSIos_kBbKaNQ0gYaaQ0Uyy8AutZ1A?e=J0HS2O&CID=01d1f82e-5dbc-3e50-37b6-635d6815158a
+
 data<-read_excel("Data/drecp-plants.xlsx", sheet = "Sheet1") %>% data.frame()
 ##read bld dataframe for plants selected by ID (to get total EOs)
 bld.sub<-read_excel("Data/bld-plants.xlsx", sheet = "Sheet1") %>% data.frame()
