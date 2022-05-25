@@ -21,7 +21,7 @@ mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx"
 
 ##read 1B plant list
 plant1b<-read_excel("Data/plants-1b.xlsx", sheet= "GlobalID") %>% data.frame() ##1B plants iwthin 5 mi of DRECP
-##use new list sent from BLM 4/13
+##use new list sent from BLM 4/13 to include criteria of being on BLM SSS list (occurring on BLM land)
 plant1b.blm<-read_excel("Data/BLMCASSPlist_20220324_forweb.xlsx") %>% data.frame()
 
 ##IRRELEVANT AFTER RECEIVING PLANT1B LIST WITH ELEMENT GLOBAL ID
@@ -51,12 +51,13 @@ plant1b$Included.in.MoBI<-mutate(.data = temp.mobi, Included.in.MoBI=coalesce(In
 ##If EO has Low or Very Low RA then include with overlap > 75%
 
 ##subset drecp plants to 1b plants and by other biotics restrictions, including whether the plant is known to occur on blm lands
+##EGT_ID is same as element global ID
 data.sub<-subset(data,
        EGT_ID %in% c(plant1b$ELEMENT_GLOBAL_ID, plant1b$PS_EGT_ID) ##include parent species for subspecies
        & POLY_AREA/Shape_Area >= 0.5
        & (LOBS_Y >= 1982 | is.na(LOBS_Y))
        & (LOBS_MAX_Y >= 1982 | is.na(LOBS_MAX_Y))
-       & (EORANK_CD %in% c("E", "B") | is.na(EORANK_CD)) #can exclude X or H. extirpated historic
+       & (!EORANK_CD %in% c("X", "H", "H?") | is.na(EORANK_CD)==F) #can exclude X or H. extirpated historic
        & (ID_CONF == "Y" | is.na(ID_CONF)) #ID confirmed !=N
        );dim(data.sub)
 ##Restrict 1b plants to get species to model
@@ -85,20 +86,13 @@ query.sql<-elcode.sql(x=plant1b$ELMCODE, y = "ELCODE_BCD")
 write.csv(query.sql, str_c("Output/BLM0R089-test-sql-query-", Sys.Date(), ".csv"), row.names = F)
 
 ##test that new method yields the same species
-#data.test<-read_excel("Output/BLM0R089-priority-model-species-2022-04-07.xlsx", sheet = "BLM0R089-priority-model-species") %>% data.frame()
-#current.temp<-data.frame(x=model.spp$ELEMENT_GLOBAL_ID, included_current=T)
-#past.temp<-data.frame(x=c(data.test$EGT_ID,3,4), included_past=T)
-#merge(current.temp, past.temp, all=T)
-snap1b<-read_excel("Data/plants-1b-snapshot.xlsx") %>% data.frame()
-snap1be<-read_excel("Data/plants-1b-snapshot.xlsx", sheet = "elcode") %>% data.frame()
+#snap1b<-read_excel("Data/plants-1b-snapshot.xlsx") %>% data.frame()
+#snap1be<-read_excel("Data/plants-1b-snapshot.xlsx", sheet = "elcode") %>% data.frame()
 
 ##write a function to compare two lists of identifiers
-compare <- function(a,b) {
-  df.a<-data.frame(x=a, included_a=T)
-  df.b<-data.frame(x=b, included_b=T)
-  full_join(df.a, df.b) %>% subset(is.na(included_a) | is.na(included_b)) %>% print()
-}
-compare(a = snap1b$SNAME, b = plant1b$SNAME)
-#compare(a = c(1,2,3, 4), b = c(1,2,3))
-#subset(plant1b, SNAME=="Monardella linoides ssp. anemonoides")
-#compare(a = plant1b$SNAME, b = plant1b.blm$Scientific.Name)
+#compare <- function(a,b) {
+#  df.a<-data.frame(x=a, included_a=T)
+#  df.b<-data.frame(x=b, included_b=T)
+#  full_join(df.a, df.b) %>% subset(is.na(included_a) | is.na(included_b)) %>% print()
+#}
+#compare(a = snap1b$SNAME, b = plant1b$SNAME)

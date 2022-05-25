@@ -1,5 +1,9 @@
 ##code to select BLD data from snapshot and subset for a given project
 
+##data gaps
+##Washington data lacks animals; there are some local copies of data from the state
+##Mass, AZ, etc- don't have their spatial data
+
 ##BLD metadata
 ##https://natureserve01.sharepoint.com/:w:/g/teamsites/mjd/EXFrFZ3iAhxDgGqXdlkWJDwBK9OoaDEM9cxtLgw1_OD0QQ?CID=f107b6da-39da-7146-7ed6-d23c1ccc8359
 
