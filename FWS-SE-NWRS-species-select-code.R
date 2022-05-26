@@ -98,13 +98,22 @@ priority<-left_join(priority, data.temp)
 hab<-read_excel("Data/FWS_SE_Habitat_species.xlsx") %>% data.frame()
 priority<-left_join(x=priority, y=hab, by = c("Scientific Name" = "Scientific.Name"))
 
+##denote if NS has already modeled this for Federal projects
+fed.spp <- read.csv("G:/tarjan/Model_Review_Management/Outputs/Modeled-species-federal-FY21.csv")
+priority$ns.model<-F
+priority$ns.model[which(priority$`Scientific Name` %in% fed.spp$Scientific.Name)]<-T
+priority$ns.model[which(priority$`Common Name` %in% fed.spp$Common.Name)]<-T
+
 ##priority are species that are not ESA listed and occur in the NWR or acquisition layer
 ##need to include more ESA statuses that are not "listed": https://help.natureserve.org/biotics/content/record_management/Element_Files/Element_Tracking/ETRACK_USESA_Status.htm
 listed<-c("E", "T")
 priority<-subset(priority, 
-                 USW0R036 == T 
-                 | (is.na(ESA.Status) 
-                    & (str_detect(`G Rank`, "G1") | str_detect(`G Rank`, "G2"))  
-                    & (Percent.range.NWR>=20 | Percent.range.acqu>=20)
-                    )
-                 )
+                 ns.model == F &
+                   (USW0R036 == T 
+                    | (is.na(ESA.Status) 
+                       & (str_detect(`G Rank`, "G1") | str_detect(`G Rank`, "G2"))  
+                       & (Percent.range.NWR>=20 | Percent.range.acqu>=20)
+                    ))
+                 ) %>% unique()
+
+#write.csv(priority, "Output/NWRS-model-species.csv", row.names = F)
