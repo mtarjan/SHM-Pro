@@ -76,6 +76,18 @@ model.spp$perc.eo.drecp<- model.spp$EO.Count.DRECP/model.spp$EO.Total*100
 ##order by perc in drecp
 model.spp <- model.spp[order(-model.spp$perc.eo.drecp),]
 
+##denote if there is a USGS model available
+prev.models <- read_excel("Data/Previous-SHM-sources.xlsx", sheet = "Sheet1") %>% data.frame()
+model.spp$existing.model<-F
+model.spp$existing.model[which(model.spp$SNAME %in% prev.models$Scientific.name)]<-T
+model.spp$existing.model[which(model.spp$CNAME %in% prev.models$Common.name)]<-T
+
+##denote if NS has already modeled this for Federal projects
+fed.spp <- read.csv("G:/tarjan/Model_Review_Management/Outputs/Modeled-species-federal-FY21.csv")
+model.spp$ns.model<-F
+model.spp$ns.model[which(model.spp$SNAME %in% fed.spp$Scientific.Name)]<-T
+model.spp$ns.model[which(model.spp$CNAME %in% fed.spp$Common.Name)]<-T
+
 write.csv(model.spp, str_c("Output/BLM0R089-priority-model-species-", Sys.Date(), ".csv"), row.names = F)
 
 ##create sql for elcodes
