@@ -7,37 +7,52 @@ library(dplyr)
 
 data<-read_excel("Data/NatureServe_Assessment_Framework_Year_1_deliverable_Sep_2021.xlsx", sheet = NULL) %>% data.frame()
 
-data$Installations_NH_Count<-ifelse(is.na(data$Installations_NatureServe), 0, 1) + ifelse(is.na(data$Installations_HerpMapper), 0, 1) + ifelse(is.na(str_count(string = data$Installations_NatureServe, pattern =",")), 0, str_count(string = data$Installations_NatureServe, pattern =",")) + ifelse(is.na(data$Installations_HerpMapper), 0, 1) + ifelse(is.na(str_count(string = data$Installations_HerpMapper, pattern =",")), 0, str_count(string = data$Installations_HerpMapper, pattern =",")) ## add up number of installations plus commas (implying another installation)
-
 data$Installations_NH_Count<-subset(data, select = c(Installations_NatureServe, Installations_HerpMapper)) %>%
   apply(MARGIN = 1, FUN = function(x) paste(x[!is.na(x)], collapse = ", ")) %>%
   str_split(pattern = ", ") %>% 
   lapply(unique) %>%
   lapply(function(x){ifelse(nchar(x)==0, 0, length(x))[1]}) %>%
   unlist()
+data$Installations_NH_Count[which(!is.na(data$Installation_Count_Obscured_Bases))] <- data$Installations_NH_Count[which(!is.na(data$Installation_Count_Obscured_Bases))] + data$Installation_Count_Obscured_Bases[which(!is.na(data$Installation_Count_Obscured_Bases))] ##add the number of obscured bases
 #subset(data, select= c(Installations_NatureServe, Installations_HerpMapper, Installations_NH_Count)) %>% head()
+
+table(data$Priority_NatureServe, data$Priority_DoD_Legacy)
 
 data$new.priority<-NA
 
-##assign priorities
+##assign priorities using ruleset
 data$new.priority[which(
-  (data$Percent_MoBI_overlap >= .25 
-   & data$Installation_Count_All > 1) 
-  | (data$Percent_EOs_Overlapping >= .25 
-     & data$Installation_Count_All > 1)
+  data$Installations_NH_Count > 1 ##found on more than 1 installation
+  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & (data$Percent_MoBI_overlap >= .25 | data$Percent_EOs_Overlapping >= .25)
   )] <- "I"
 
 data$new.priority[which(
   is.na(data$new.priority)
-  & data$Installations_NH_Count > 1
+  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & data$Installations_NH_Count > 1 ##>= 1 NS or Herp record on installation
 )] <- "II"
 
 data$new.priority[which(
-  is.na(data$new.priority) 
-  & data$Installations_NH_Count == 1
+  is.na(data$new.priority) ##not priority 1 to x-1
+  & data$Installations_NH_Count > 0
+  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
 )] <- "III"
 
-table(data$new.priority, data$Priority_NatureServe)
+data$new.priority[which(
+  is.na(data$new.priority) ##not priority 1 to x-1
+  & data$Installation_Count_All > 0 ##at least 1 installation with mobi prediction or observation
+  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+)] <- "IV"
+
+data$new.priority[which(
+  is.na(data$new.priority) ##not priority 1 to x-1
+  & data$Installation_Count_All > 0 ##at least 1 installation with mobi prediction or observation
+  & !is.na(data$Include_Reason)
+)] <- "V"
+
+table(data$new.priority, data$Priority_NatureServe) ##check whether the new priority ranking matches what bruce came up with
+table(data$new.priority)
 
 ##create list of species for modeling in year 3
 ##add which species have been modeled in previous years
