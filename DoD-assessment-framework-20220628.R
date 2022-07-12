@@ -24,25 +24,26 @@ data$new.priority<-NA
 data$new.priority[which(
   data$Installations_NH_Count > 1 ##found on more than 1 installation
   & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
-  & (data$Percent_MoBI_overlap >= .25 | data$Percent_EOs_Overlapping >= .25)
+  #& (data$Percent_MoBI_overlap >= .25 | data$Percent_EOs_Overlapping >= .25)
   )] <- "I"
-
-data$new.priority[which(
-  is.na(data$new.priority)
-  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
-  & data$Installations_NH_Count > 1 ##>= 1 NS or Herp record on installation
-)] <- "II"
 
 data$new.priority[which(
   is.na(data$new.priority) ##not priority 1 to x-1
   & data$Installations_NH_Count > 0
+  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+)] <- "II"
+
+data$new.priority[which(
+  is.na(data$new.priority) ##not priority 1 to x-1
+  & data$Installation_Count_All > 0 ##at least 1 installation with mobi prediction or observation
   & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
 )] <- "III"
 
 data$new.priority[which(
   is.na(data$new.priority) ##not priority 1 to x-1
   & data$Installation_Count_All > 0 ##at least 1 installation with mobi prediction or observation
-  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & (data$Percent_MoBI_overlap >= .1 | data$Percent_EOs_Overlapping >= .1)
+  & !is.na(data$Include_Reason)
 )] <- "IV"
 
 data$new.priority[which(
