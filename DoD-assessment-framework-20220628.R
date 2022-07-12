@@ -55,7 +55,7 @@ data$new.priority[which(
 table(data$new.priority, data$Priority_NatureServe) ##check whether the new priority ranking matches what bruce came up with
 table(data$new.priority)
 
-#write.csv(data, "Output/NatureServe_Assessment_Framework_Year_1_Revised_20220712.csv", row.names = F)
+write.csv(data, "Output/NatureServe_Assessment_Framework_Year_1_Revised_20220712.csv", row.names = F, na="")
 
 ##create list of species for modeling in year 3
 ##add which species have been modeled in previous years
