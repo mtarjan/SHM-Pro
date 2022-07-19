@@ -18,25 +18,28 @@ data$Installations_NH_Count[which(!is.na(data$Installation_Count_Obscured_Bases)
 
 table(data$Priority_NatureServe, data$Priority_DoD_Legacy)
 
+data$has.status<-F
+data[which((!is.na(data$USESA_Status) & data$USESA_Status != "DL") | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)),]$has.status<-T
+
 data$new.priority<-NA
 
 ##assign priorities using ruleset
 data$new.priority[which(
   data$Installations_NH_Count > 1 ##found on more than 1 installation
-  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & data$has.status == T ##USESSA listed, FWS 5-yr plan, or existing TER-S
   #& (data$Percent_MoBI_overlap >= .25 | data$Percent_EOs_Overlapping >= .25)
   )] <- "I"
 
 data$new.priority[which(
   is.na(data$new.priority) ##not priority 1 to x-1
   & data$Installations_NH_Count > 0
-  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & data$has.status == T ##USESSA listed, FWS 5-yr plan, or existing TER-S
 )] <- "II"
 
 data$new.priority[which(
   is.na(data$new.priority) ##not priority 1 to x-1
   & data$Installation_Count_All > 0 ##at least 1 installation with mobi prediction or observation
-  & (!is.na(data$USESA_Status) | !is.na(data$FWS_5.yr_Work_Plan) | !is.na(data$DoD_Current_Priority)) ##USESSA listed, FWS 5-yr plan, or existing TER-S
+  & data$has.status == T ##USESSA listed, FWS 5-yr plan, or existing TER-S
 )] <- "III"
 
 data$new.priority[which(
@@ -55,7 +58,7 @@ data$new.priority[which(
 table(data$new.priority, data$Priority_NatureServe) ##check whether the new priority ranking matches what bruce came up with
 table(data$new.priority)
 
-write.csv(data, "Output/NatureServe_Assessment_Framework_Year_1_Revised_20220712.csv", row.names = F, na="")
+write.csv(data, "Output/NatureServe_Assessment_Framework_Year_1_Revised_20220718.csv", row.names = F, na="")
 
 ##create list of species for modeling in year 3
 ##add which species have been modeled in previous years
