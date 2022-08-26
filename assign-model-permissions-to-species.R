@@ -19,8 +19,11 @@ head(spp.subn)
 ##add taxonomic group to models
 models <- left_join(subset(models, select = c(model_version, created_for_project, element_global_id, scientific_name, subn_EO_included)), unique(subset(eos, select = c(NAME_CAT_DESC, ELEMENT_GLOBAL_ID))), by = c("element_global_id" = "ELEMENT_GLOBAL_ID")) %>% data.frame()
 
+##add subnations to each species
+models <- left_join(models, spp.subn, by = c("element_global_id" = "ELEMENT_GLOBAL_ID"))
+
 ##add number of eos per subnation available; increases number of rows
-models2 <- left_join(subset(models, select = c(model_version, created_for_project, element_global_id, scientific_name)), subset(eos, select = c(NAME_CAT_DESC, GNAME, ELEMENT_GLOBAL_ID, SUBNATION_CODE, NUM_EOS, NUM_CURRENT_EOS)), by = c("element_global_id" = "ELEMENT_GLOBAL_ID")) %>% data.frame()
+#models2 <- left_join(subset(models, select = c(model_version, created_for_project, element_global_id, scientific_name)), subset(eos, select = c(NAME_CAT_DESC, GNAME, ELEMENT_GLOBAL_ID, SUBNATION_CODE, NUM_EOS, NUM_CURRENT_EOS)), by = c("element_global_id" = "ELEMENT_GLOBAL_ID")) %>% data.frame()
 
 ##check that there are are matches for all species
 #subset(models2, is.na(GNAME), select = c(scientific_name, created_for_project))
