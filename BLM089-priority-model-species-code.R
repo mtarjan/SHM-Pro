@@ -117,3 +117,26 @@ names(mobi)[1:8]<-c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021",	"ELEMENT_GLOBAL
 
 ##add model confidence and preliminary assessment to list of blm ca desert species
 spp2 <- left_join(spp, subset(mobi, select = c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021","Overal All Confidence", "Preliminary Model Assessment")), by = c("ELEMENT_GLOBAL_ID" = "ELEMENT_GLOBAL_ID_2021")) %>% data.frame()
+
+##donut charts for methodology report
+##proportion with each G rank
+##proportion of EOs in DRECP region
+data.plot<-data.frame(table(spp2$Included.in.MoBI))
+
+##get the label positions
+data.plot <- data.plot %>%
+  arrange(desc(Var1)) %>%
+  mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
+  data.frame()
+data.plot
+
+fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", color = "white") +
+  coord_polar(theta = "y", start = 0)+
+  geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
+  #geom_text(aes(y = 1, x = 1, label = paste0(round(label*100,0), "%")), color = c("black"), size = 6) +
+  scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+  theme_void() +
+  xlim(.9, 2.5) +
+  theme(text = element_text(size = 10), legend.position="right")
+fig
