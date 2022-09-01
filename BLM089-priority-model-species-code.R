@@ -108,3 +108,12 @@ write.csv(query.sql, str_c("Output/BLM0R089-test-sql-query-", Sys.Date(), ".csv"
 #  full_join(df.a, df.b) %>% subset(is.na(included_a) | is.na(included_b)) %>% print()
 #}
 #compare(a = snap1b$SNAME, b = plant1b$SNAME)
+
+##CREATE LIST OF EXISTING MODELS AND THEIR USES
+spp<-read_excel("Data/BLM0R089-priority-model-species-2022-05-26.xlsx", sheet = "BLM0R089-priority-model-species")
+
+mobi<-read_excel("C:/Users/max_tarjan/NatureServe/Map of Biodiversity Importance - Summary Tables/MoBI Modeling Summary by Species January 2021.xlsx", sheet = "MoBI_Model_Assessment", skip = 2)# %>% data.frame()
+names(mobi)[1:8]<-c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021",	"ELEMENT_GLOBAL_ID_2018",	"Cutecode",	"Broad.Group",	"Taxonomic.Group",	"Scientific.Name",	"Common.Name")
+
+##add model confidence and preliminary assessment to list of blm ca desert species
+spp2 <- left_join(spp, subset(mobi, select = c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021","Overal All Confidence", "Preliminary Model Assessment")), by = c("ELEMENT_GLOBAL_ID" = "ELEMENT_GLOBAL_ID_2021")) %>% data.frame()
