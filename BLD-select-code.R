@@ -23,7 +23,7 @@ arc.check_product()
 library(reticulate)
 reticulate::use_condaenv(condaenv='C:/Program Files/ArcGIS/Pro/bin/Python/envs/arcgispro-py3', required = T)
 
-library(sf)
+#library(sf)
 library(tidyverse)
 #library(readxl)
 
@@ -36,7 +36,8 @@ if (!file.exists(str_c("Output-", Sys.Date()))) {
 
 ##LOAD SPATIAL LAYERS
 ##layer of spatial extent for selecting species
-desert.path<-"C:/Users/max_tarjan/OneDrive - NatureServe/Documents/GIS_data/DRECP Boundary/data/v101/0000DRECP Boundary.lyr"
+boundary.path<-"C:/Users/max_tarjan/OneDrive - NatureServe/Documents/GIS_data/DRECP Boundary/data/v101/0000DRECP Boundary.lyr"
+#boundary.path<-"Data/BLM_National_Surface_Management_Agency/BLM_Lands_NAD83.shp"
 
 ##biotics snapshot
 bld.path<-"S:/Data/NatureServe/BLD_Occurrences/NS_BLD_GeoDB/Snapshots/Monthly-2022-03/bld-2022-03.gdb/BLD_EO_SPECIES"
@@ -44,7 +45,7 @@ bld.path<-"S:/Data/NatureServe/BLD_Occurrences/NS_BLD_GeoDB/Snapshots/Monthly-20
 ##CLIP BLD EOS BY A BOUNDARY LAYER
 ##result is written out as a shapefile
 start.time<-Sys.time()
-arcpy$Clip_analysis(in_features = bld.path, clip_features = desert.path, out_feature_class = str_c("Output-", Sys.Date(), "/bld_desert"))
+arcpy$Clip_analysis(in_features = bld.path, clip_features = boundary.path, out_feature_class = str_c("Output-", Sys.Date(), "/bld_desert"))
 
 ##open clipped bld using arcbridge for wrangling
 bld.desert.path<-str_c("Output-", Sys.Date(), "/bld_desert.shp")
