@@ -118,7 +118,7 @@ names(mobi)[1:8]<-c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021",	"ELEMENT_GLOBAL
 ##add model confidence and preliminary assessment to list of blm ca desert species
 spp2 <- left_join(spp, subset(mobi, select = c("Scientific.Name",	"ELEMENT_GLOBAL_ID_2021","Overal All Confidence", "Preliminary Model Assessment")), by = c("ELEMENT_GLOBAL_ID" = "ELEMENT_GLOBAL_ID_2021")) %>% data.frame()
 
-#write.csv(spp2, "output/BLM0R089-model-species-confidence-20220921.csv", row.names=F)
+#write.csv(spp2, "output/BLM0R089-model-species-confidence-20220921.csv", row.names=F, na = "")
 
 ##donut charts for methodology report
 ##proportion with each G rank
