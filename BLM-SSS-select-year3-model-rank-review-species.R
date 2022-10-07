@@ -117,3 +117,24 @@ dim(yr3.spp)
 table(yr3.spp$Taxonomic.Group)
 subset(yr3.spp, select = c(Taxonomic.Group, Common.Name, USESA))
 write.csv(yr3.spp, "output/BLMSSS-yr3-modeling-targets-species-list-20221007.csv", row.names = F)
+
+##Prioritize Species for Conservation Status Assessments
+##year 3 rank review
+##list of species to include from Bruce
+include.list<-c(102241, 105276, 104046, 115612, 116379, 107133)
+
+yr3.rr<- subset(sss2,
+                Element.Global.ID %in% include.list |
+                (USESA !="DL"
+                & !is.na(USESA)
+                & roundedGRank %in% c("G1", "G2", "G3")#,"T1", "T2", "T3")
+                & as.numeric(Occurrences.on.BLM.Lands..West....Total.Occurrences.Rangewide) >= 0.2
+                & lubridate::year(as.Date(grankReviewDate, format = "%Y-%m-%d")) < 2012)) %>% arrange(grankReviewDate)
+yr3.rr$zoo<-NA
+yr3.rr$zoo[which(yr3.rr$Element.Global.ID %in% include.list)]<-T
+dim(yr3.rr)
+table(yr3.rr$Taxonomic.Group)
+subset(yr3.rr, select = c(Element.Global.ID, Taxonomic.Group, Scientific.Name, Common.Name, USESA, roundedGRank, grankReviewDate, zoo))
+
+##Write out list of species for conservation status assessments in year 3
+write.csv(yr3.rr, "output/BLMSSS-yr3-rank-review-list-20221007.csv", row.names=F, na = "")
