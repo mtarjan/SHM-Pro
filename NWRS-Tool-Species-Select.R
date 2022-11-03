@@ -37,12 +37,12 @@ LEFT JOIN element_global_rank egr
 LEFT JOIN taxon_global esa_tg
     ON egt.element_global_id = esa_tg.element_global_id
 WHERE
-/* criteria that applies to all records - active, regular and confident in US or Canada */ 
+/* criteria that applies to all records - active, regular and confident in US */ 
   egt.inactive_ind = 'N' 
   and egt.element_global_id in ( 
     (SELECT ent.element_global_id 
       FROM element_national ent 
-      where ent.nation_id in (38,225) 
+      where ent.nation_id in (225) 
        and ent.element_national_id in  
        (select tnd.element_national_id from taxon_natl_dist tnd 
         where tnd.d_regularity_id = 1 /* Regularly occurring */ and tnd.d_dist_confidence_id = 1 /* confident */)))"
@@ -54,25 +54,14 @@ odbcClose(con)
 
 dat <- left_join(spp, data.frame(ELEMENT_GLOBAL_ID = sgcn$elementGlobalId, sgcn=T))
 dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = as.numeric(models$element_global_id), modeled=T))
-dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=T))
+dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=T)) %>% unique()
 
 ## Subset element global ids to include those that meet each parameter (candidates)
+## G1,g2,g3, t1, t2, t3, esa listed, or sgcn that is tracked by the network for which we have data (eos or models) - how many have eos, how many have models 
+## CONUS - no AK or HI
 cand <- dat %>%
+  ##esa id 39 is delisted
   filter(ROUNDED_G_RANK %in% c("G1", "G2", "G3", "T1", "T2", "T3") | (!is.na(D_USESA_ID) & D_USESA_ID != 39) | sgcn) %>%
   group_by(modeled, eos) %>% summarise(n = n()) %>%
   data.frame()
 cand
-
-##G1,g2,g3, t1, t2, t3, esa listed, sgcn that is tracked by the network for which we have data (eos or models) - how many have eos how many have models 
-
-##Gio will share list of sgcn  
-
-##Ones that are "tracked by the network" 
-
-##Which have eos, which have models 
-
-##Conus – no ak, hi 
-
-##For tomorrow – just ignore if they are tracked 
-
-##List of models is all in taxon table and model_status_table (exclude planned) 
