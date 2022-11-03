@@ -5,6 +5,7 @@
 ## Load packages
 library(readxl)
 library(tidyverse)
+library(RODBC)
 
 ## LOAD DATA
 ## SGCN species
@@ -19,6 +20,48 @@ models <- read_excel("C:/Users/max_tarjan/NatureServe/Conservation Science - App
 
 ## G1, G2, G3, T1, T2, T3, ESA listed
 ## Number of EOs per species
+eos <- read_excel("Data/Biotics_EO_Summary.xlsx", sheet= "EO_Summary_202207")
+
+## Query Biotics for relevant species
+## NEED TO FIRST CONNECT TO VPN
+con<-odbcConnect("BIOSNAPDB07", uid="biotics_report", pwd=rstudioapi::askForPassword("Password")) ##open connection to database
+
+qry <- "SELECT DISTINCT egt.element_global_id, gname.scientific_name, egt.g_primary_common_name, nc.name_category_desc, egt.rounded_g_rank, ESA_TG.D_USESA_ID
+FROM  element_global egt
+LEFT JOIN scientific_name gname
+  ON egt.gname_id = gname.scientific_name_id
+LEFT JOIN d_name_category nc
+  ON gname.d_name_category_id = nc.d_name_category_id
+LEFT JOIN element_global_rank egr
+    ON egt.element_global_id = egr.element_global_id
+LEFT JOIN taxon_global esa_tg
+    ON egt.element_global_id = esa_tg.element_global_id
+WHERE
+/* criteria that applies to all records - active, regular and confident in US or Canada */ 
+  egt.inactive_ind = 'N' 
+  and egt.element_global_id in ( 
+    (SELECT ent.element_global_id 
+      FROM element_national ent 
+      where ent.nation_id in (38,225) 
+       and ent.element_national_id in  
+       (select tnd.element_national_id from taxon_natl_dist tnd 
+        where tnd.d_regularity_id = 1 /* Regularly occurring */ and tnd.d_dist_confidence_id = 1 /* confident */)))"
+
+spp <- sqlQuery(con, qry); head(spp) ##import the queried table
+
+# When finished, it's a good idea to close the connection
+odbcClose(con)
+
+dat <- left_join(spp, data.frame(ELEMENT_GLOBAL_ID = sgcn$elementGlobalId, sgcn=T))
+dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = as.numeric(models$element_global_id), modeled=T))
+dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=T))
+
+## Subset element global ids to include those that meet each parameter (candidates)
+cand <- dat %>%
+  filter(ROUNDED_G_RANK %in% c("G1", "G2", "G3", "T1", "T2", "T3") | (!is.na(D_USESA_ID) & D_USESA_ID != 39) | sgcn) %>%
+  group_by(modeled, eos) %>% summarise(n = n()) %>%
+  data.frame()
+cand
 
 ##G1,g2,g3, t1, t2, t3, esa listed, sgcn that is tracked by the network for which we have data (eos or models) - how many have eos how many have models 
 
