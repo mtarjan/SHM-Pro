@@ -61,7 +61,8 @@ dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=
 ## CONUS - no AK or HI
 cand <- dat %>%
   ##esa id 39 is delisted
-  filter(ROUNDED_G_RANK %in% c("G1", "G2", "G3", "T1", "T2", "T3") | (!is.na(D_USESA_ID) & D_USESA_ID != 39) | sgcn) %>%
+  ##can also include sgcns
+  filter(ROUNDED_G_RANK %in% c("G1", "G2", "T1", "T2") & (!is.na(D_USESA_ID) & D_USESA_ID != 39)) %>%
   group_by(modeled, eos) %>% summarise(n = n()) %>%
   data.frame()
 cand
