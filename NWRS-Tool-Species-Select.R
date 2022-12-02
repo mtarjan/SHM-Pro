@@ -22,9 +22,12 @@ models <- read_excel("C:/Users/max_tarjan/NatureServe/Conservation Science - App
 ## Number of EOs per species
 eos <- read_excel("Data/Biotics_EO_Summary.xlsx", sheet= "EO_Summary_202207")
 
+## Get the number of current eos and all relevant subnations
+eos.conus <- eos %>% filter(!(SUBNATION_CODE %in% c("AK", "HI")) & NATION == "United States" & NUM_CURRENT_EOS > 0) %>% group_by(ELEMENT_GLOBAL_ID) %>% summarise(NUM_CURRENT_EOS = sum(NUM_CURRENT_EOS), STATES = paste0(SUBNATION_CODE, collapse = ", "))
+
 ## Query Biotics for relevant species
 ## NEED TO FIRST CONNECT TO VPN
-con<-odbcConnect("BIOSNAPDB07", uid="biotics_report", pwd=rstudioapi::askForPassword("Password")) ##open connection to database
+con<-odbcConnect("centralbiotics", uid="biotics_report", pwd=rstudioapi::askForPassword("Password")) ##open connection to database
 
 qry <- "SELECT DISTINCT egt.element_global_id, gname.scientific_name, egt.g_primary_common_name, nc.name_category_desc, egt.rounded_g_rank, ESA_TG.D_USESA_ID
 FROM  element_global egt
@@ -54,7 +57,7 @@ odbcClose(con)
 
 dat <- left_join(spp, data.frame(ELEMENT_GLOBAL_ID = sgcn$elementGlobalId, sgcn=T))
 dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = as.numeric(models$element_global_id), modeled=T))
-dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=T)) %>% unique()
+dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos.conus$ELEMENT_GLOBAL_ID, eos=T)) %>% unique()
 
 ## Subset element global ids to include those that meet each parameter (candidates)
 ## G1,g2,g3, t1, t2, t3, esa listed, or sgcn that is tracked by the network for which we have data (eos or models) - how many have eos, how many have models 
@@ -62,7 +65,7 @@ dat <- left_join(dat, data.frame(ELEMENT_GLOBAL_ID = eos$ELEMENT_GLOBAL_ID, eos=
 cand <- dat %>%
   ##esa id 39 is delisted
   ##can also include sgcns
-  filter(ROUNDED_G_RANK %in% c("G1", "G2", "T1", "T2") & (!is.na(D_USESA_ID) & D_USESA_ID != 39)) %>%
+  filter(ROUNDED_G_RANK %in% c("G1", "G2", "T1", "T2") | (!is.na(D_USESA_ID) & D_USESA_ID != 39) | sgcn) %>%
   group_by(modeled, eos) %>% summarise(n = n()) %>%
   data.frame()
 cand
