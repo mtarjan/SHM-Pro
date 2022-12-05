@@ -76,3 +76,5 @@ cand
 permissions <- left_join(dat, eos.conus) %>% 
   filter(ROUNDED_G_RANK %in% c("G1", "G2", "T1", "T2") | (!is.na(D_USESA_ID) & D_USESA_ID != 39) | sgcn) %>%
   filter(modeled | eos)
+
+write.csv(permissions, "C:/Users/max_tarjan/NatureServe/FWS - FWS SE HSM Pilot/NWRS Tool (USW0R037)/Taxa-permissions-20221205.csv", row.names = F)
