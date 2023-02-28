@@ -17,7 +17,7 @@ bld.sub<-read_excel("Data/bld-plants.xlsx", sheet = "Sheet1") %>% data.frame()
 bld.sub<-subset(bld.sub, ID_CONF == "Y" | is.na(ID_CONF))
 
 ##add mobi models
-mobimodels<-read_excel("Data/MoBI Modeling Summary by Species January 2021.xlsx", sheet = "MoBI_Model_Assessment", skip = 2) %>% data.frame()
+mobimodels<-read_excel("C:/Users/max_tarjan/NatureServe/Map of Biodiversity Importance - Summary Tables/MoBI Modeling Summary by Species January 2021.xlsx", sheet = "MoBI_Model_Assessment", skip = 3) %>% data.frame()
 
 ##read 1B plant list
 plant1b<-read_excel("Data/plants-1b.xlsx", sheet= "GlobalID") %>% data.frame() ##1B plants iwthin 5 mi of DRECP
