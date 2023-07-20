@@ -5,7 +5,7 @@ library(googlesheets4)
 models <- googlesheets4::read_sheet(ss = "https://docs.google.com/spreadsheets/d/1KRpadqcG-OWdknG0rVwbppxp1RRHYpHM_tqR9QyUyLI/edit#gid=2032498813&fvid=699721595", sheet = "model_status_table")
 
 ##overwrite with working sheet
-models <- googlesheets4::read_sheet(ss = "https://docs.google.com/spreadsheets/d/1KRpadqcG-OWdknG0rVwbppxp1RRHYpHM_tqR9QyUyLI/edit#gid=2032498813&fvid=699721595", sheet = "model_status_table_working") ##working models sheet
+#models <- googlesheets4::read_sheet(ss = "https://docs.google.com/spreadsheets/d/1KRpadqcG-OWdknG0rVwbppxp1RRHYpHM_tqR9QyUyLI/edit#gid=2032498813&fvid=699721595", sheet = "model_status_table_working") ##working models sheet
 
 mort <- googlesheets4::read_sheet(ss = "https://docs.google.com/spreadsheets/d/186lF05P5jPVookkesbfntC91FIJ5YNdzMgkP0FTdNPU/edit#gid=0", sheet = "Sheet1")
 
@@ -37,3 +37,7 @@ models %>% filter(year_project1 == "[BLMuploads]") %>% select(model_status) %>% 
 ##models delivered to fws se
 models.fwsse <- models %>% filter((project1 == "USW0R035" | project2 == "USW0R035")) %>% select(element_global_id, scientific_name, common_name) %>% data.frame() %>% unique() %>% mutate(element_global_id = unlist(element_global_id))
 #write.csv(models.fwsse, "Models_delivered_FWS_SE_20230717.csv", row.names = F)
+
+##model products for blm
+models.blm <- models %>% filter((project1 == "BLM0086" | project1 == "BLM008" | year_project1 == "[BLMuploads]") & model_status != "planned") %>% select(element_global_id, scientific_name, common_name, project1, year_project1, model_status) %>% data.frame() %>% unique() %>% mutate(element_global_id = unlist(element_global_id)) %>% arrange(project1, year_project1)
+write.csv(models.blm, "Models_for_BLM_SSS_20230720.csv", row.names = F)
